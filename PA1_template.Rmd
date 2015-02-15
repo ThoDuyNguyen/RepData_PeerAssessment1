@@ -18,7 +18,7 @@ library(ggplot2)
 library(knitr)
 ```
 
-Loading data from csv file. Column "date" should be recoded to correct class. 
+Unzip and loading data from csv file. Column "date" should be recoded to correct class. 
 
 ```{r loadingData, cache=TRUE}
 unzip(zipfile="activity.zip")
@@ -141,7 +141,7 @@ filled.data$weekend <- revalue(filled.data$weekend, c("TRUE"="weekend","FALSE"="
 filled.data.interval.grouped<- filled.data %>% group_by(interval, weekend) %>% summarise(sum.steps = mean(steps))
 ```
 Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
-```{r figMeanOfStepsByInterval_FilleData, fig.height=10, fig.width=10, fig.path='figure/'}
+```{r figMeanOfStepsByInterval_FilledData, fig.height=10, fig.width=10, fig.path='figure/'}
 ggplot(filled.data.interval.grouped, aes(x=interval, y=sum.steps)) + geom_line(colour="blue") +
     coord_cartesian(xlim = c(0, 2355), )+
     scale_x_continuous(breaks = c(0,400,800,1200,1600,2000,2355)) +

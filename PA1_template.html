@@ -66,9 +66,11 @@ library(plyr)
 library(dplyr)
 library(ggplot2)
 library(knitr)</code></pre>
-<p>Loading data from csv file. Column “date” should be recoded to correct class.</p>
-<pre class="r"><code>unzip(zipfile=&quot;repdata_data_activity.zip&quot;)
-data &lt;- read.csv(&quot;activity.csv&quot;, header = TRUE, stringsAsFactors = FALSE)
+<p>Unzip and loading data from csv file. Column “date” should be recoded to correct class.</p>
+<pre class="r"><code>unzip(zipfile=&quot;activity.zip&quot;)</code></pre>
+<pre><code>## Warning in unzip(zipfile = &quot;activity.zip&quot;): error 1 in extracting from zip
+## file</code></pre>
+<pre class="r"><code>data &lt;- read.csv(&quot;activity.csv&quot;, header = TRUE, stringsAsFactors = FALSE)
 data$date &lt;- ymd(data$date)</code></pre>
 </div>
 <div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level3">

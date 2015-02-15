@@ -95,6 +95,10 @@ max.steps.intervals
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
 
 There are `r sum(is.na(data$steps))` rows with missing values.
+```{r}
+sum(is.na(data$steps))
+```
+
 
 Devise a strategy for filling in all of the missing values in the dataset. Missing value of steps for a specific interval will be filled with mean of steps for that 5-minute interval (averaged across all days). 
 

@@ -1,25 +1,157 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: "Reproducible Research Assignment 1"
+author: "Tho Nguyen Duy"
+date: "Saturday, February 14, 2015"
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
+### Loading and preprocessing the data
+Loading necessary library:
 
-## Loading and preprocessing the data
+```{r loadingLibrary, message=FALSE}
+library(lubridate)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+Loading data from csv file. Column "date" should be recoded to correct class. 
+
+```{r loadingData, cache=TRUE}
+unzip(zipfile="activity.zip")
+data <- read.csv("activity.csv", header = TRUE, stringsAsFactors = FALSE)
+data$date <- ymd(data$date)
+```
 
 
+### What is mean total number of steps taken per day?
+In this section, NA value will be ignored, therefore only complete row will be extract.
 
-## What is mean total number of steps taken per day?
+```{r extractCompleteData, cache=TRUE}
+valid.index <- !is.na(data$steps)
+valid.data <- data[which(valid.index),]
+```
 
+Calculate the total number of steps taken per day.
 
+```{r totalNumberOfStepsPerDay, cache=TRUE}
+valid.data.date.grouped <- valid.data %>%
+                                group_by(date) %>%
+                                summarise(sum.steps = sum(steps))
+kable(valid.data.date.grouped, caption="Total number of steps taken per day")
+```
 
-## What is the average daily activity pattern?
+Make a histogram of the total number of steps taken each day
 
+```{r figHistogramStepsEachDays, fig.width=10, fig.height=10, fig.path='figure/'}
+ggplot(valid.data.date.grouped, aes(x=sum.steps)) +
+    geom_histogram(binwidth = 500) +
+    xlab("Number of steps") + ylab("Frequency") + 
+    ggtitle("Histogram of sum of steps each day")
+```
 
+Mean of the total number of steps taken per day:  
 
-## Imputing missing values
+```{r cache=TRUE}
+mean(valid.data.date.grouped$sum.steps)
+```
 
+Median of the total number of steps taken per day: 
 
+```{r cache=TRUE}
+median(valid.data.date.grouped$sum.steps)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+### What is the average daily activity pattern?
+Group data by interval 
+```{r groupcache=TRUE}
+mean.steps.interval.grouped <- valid.data %>%
+                            group_by(interval) %>%
+                            summarise(sum.steps = mean(steps))
+```
+
+Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r figMeanOfStepByInterval, fig.height=10, fig.width=10, fig.path='figure/'}
+ggplot(mean.steps.interval.grouped, aes(x=interval, y=sum.steps)) +
+    geom_line() + ggtitle("Mean of steps by interval") +
+    xlab("5-minutes interval") + ylab("Number of steps") + 
+    coord_cartesian(xlim = c(0, 2355), )+
+    scale_x_continuous(breaks = c(0,400,800,1200,1600,2000,2355))
+```
+
+Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r findMaxStepsInterval, cache=TRUE}
+max.steps <- max(mean.steps.interval.grouped$sum.steps)
+max.steps.intervals <- mean.steps.interval.grouped[mean.steps.interval.grouped$sum.steps == max.steps,]
+max.steps.intervals
+```
+
+### Imputing missing values
+Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
+
+There are `r sum(is.na(data$steps))` rows with missing values.
+
+Devise a strategy for filling in all of the missing values in the dataset. Missing value for a specific interval will be filled with mean for that 5-minute interval. 
+
+```{r fillMissingData, cache=TRUE, message=FALSE}
+invalid.data <- data[is.na(data$steps),]
+merge.invalid.data <- inner_join(x = invalid.data, y = mean.steps.interval.grouped)
+merge.invalid.data$steps <- merge.invalid.data$sum.steps
+filled.data <- rbind(merge.invalid.data[,1:3], valid.data)
+```
+
+Make a new histogram for sum of steps each day with filled data 
+
+```{r figHistogramStepsEachDay_FilledData, fig.height=10, fig.width=10, fig.path='figure/'}
+filled.data.date.grouped <- filled.data %>%
+                                group_by(date) %>%
+                                summarise(sum.steps = sum(steps))
+ggplot(filled.data.date.grouped, aes(x=sum.steps)) +
+    geom_histogram(binwidth = 500) +
+    xlab("Number of steps") + ylab("Frequency") + 
+    ggtitle("Histogram of sum of steps each day (filled data)")
+```
+
+Mean of the total number of steps taken per day with filled data:  
+
+```{r cache=TRUE}
+mean(filled.data.date.grouped$sum.steps)
+```
+
+Median of the total number of steps taken per filled data day: 
+
+```{r cache=TRUE}
+median(filled.data.date.grouped$sum.steps)
+```
+
+These mean and median values do not differ much from the old ones (calculated with excluding NA dataset). In the orginal dataset, there are days with all interval is NA. In the first part, we choose to exclude all the missing rows (also means excluding days). In this part, we fill missing data using the mean of steps of interval. There fore, mean values are the same and median values do not differ much. 
+
+### Are there differences in activity patterns between weekdays and weekends?
+Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+```{r cache=TRUE}
+date <- weekdays(filled.data$date)
+filled.data$weekend <- date == "Saturday" | date == "Sunday"
+filled.data$weekend <- factor(filled.data$weekend)
+filled.data$weekend <- revalue(filled.data$weekend, c("TRUE"="weekend","FALSE"="weekday"))
+filled.data.interval.grouped<- filled.data %>% group_by(interval, weekend) %>% summarise(sum.steps = mean(steps))
+```
+Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
+```{r figMeanOfStepsByInterval_FilleData, fig.height=10, fig.width=10, fig.path='figure/'}
+ggplot(filled.data.interval.grouped, aes(x=interval, y=sum.steps)) + geom_line(colour="blue") +
+    coord_cartesian(xlim = c(0, 2355), )+
+    scale_x_continuous(breaks = c(0,400,800,1200,1600,2000,2355)) +
+    ggtitle("Mean of steps by 5-minutes interval, classified by weekday") +
+    xlab("5-minutes interval") + ylab("Number of steps") + 
+    facet_grid(weekend~.)
+```
+Activity of people in weekend and week day are diffrenet in general. 
+
+* For the time from `0` to around `525`, activity is the same. Probably because it is sleeping time. 
+* Difference starts at between `525` and roughly `800`. This could be explained that people prepare for work in weekday while in weekend, people are not rush. 
+* Activity in weekday are highest around `830` when people get to work. From that moment to `1700`, activity in weekday more stable than in weekday
+* On weekend day, people seem to have high activity till `2000` but in weekday, there is less activity. This could be people need to rest after a working day. 

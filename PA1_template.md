@@ -96,7 +96,7 @@ Calculate and report the total number of missing values in the dataset (i.e. the
 
 There are `r sum(is.na(data$steps))` rows with missing values.
 
-Devise a strategy for filling in all of the missing values in the dataset. Missing value for a specific interval will be filled with mean for that 5-minute interval. 
+Devise a strategy for filling in all of the missing values in the dataset. Missing value of steps for a specific interval will be filled with mean of steps for that 5-minute interval (averaged across all days). 
 
 ```{r fillMissingData, cache=TRUE, message=FALSE}
 invalid.data <- data[is.na(data$steps),]

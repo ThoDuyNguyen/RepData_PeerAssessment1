@@ -2,6 +2,7 @@
 title: "Reproducible Research Assignment 1"
 author: "Tho Nguyen Duy"
 date: "Saturday, February 14, 2015"
+revised : "Monday, March 9, 2015"
 output:
   html_document:
     keep_md: yes
